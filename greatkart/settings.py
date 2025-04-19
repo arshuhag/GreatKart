@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'carts',
+    'orders',
 ]
 
 MIDDLEWARE = [
@@ -149,3 +150,21 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'developer.arshuhag@gmail.com'
 EMAIL_HOST_PASSWORD = 'jiot ivtk asli menq'
 EMAIL_USE_TLS = True
+
+
+# # Session settings
+# SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
+# SESSION_COOKIE_AGE = 3600  # Session duration in seconds (1 hour)
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Session expires when browser is closed
+# SESSION_SAVE_EVERY_REQUEST = True  # Save session data on every request
+
+# # Session security settings
+# SESSION_COOKIE_SECURE = True  # Ensure session cookies are only sent over HTTPS
+# CSRF_COOKIE_SECURE = True  # Ensure CSRF cookies are only sent over HTTPS
+
+#sslcommerce configuration
+
+SSLCOMMERZ_STORE_ID = 'great680114a7e1ea9'
+SSLCOMMERZ_STORE_PASSWORD = 'great680114a7e1ea9@ssl'
+SSLCOMMERZ_INIT_URL = 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
+SSLCOMMERZ_VALIDATION_URL = 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'
