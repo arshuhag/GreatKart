@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Cart, CartItem
 from store.models import Product, Variation
@@ -16,6 +16,11 @@ def _cart_id(request):
 def add_to_cart(request, product_id):
     current_user = request.user
     product = Product.objects.get(id=product_id) #get the product by id
+    
+    # Check if product is in stock
+    if product.stock <= 0:
+        return JsonResponse({'error': 'This product is out of stock'}, status=400)
+    
     #if the user is authenticated, get the cart items for the user
     if current_user.is_authenticated:
         product_variation = []
@@ -43,21 +48,36 @@ def add_to_cart(request, product_id):
                 index = ex_var_list.index(product_variation) #get the index of the product variation
                 item_id = id[index] #get the id of the cart item
                 item = CartItem.objects.get(product=product, id=item_id) #get the cart item by id
+                
+                # Check if adding one more would exceed stock
+                if item.quantity + 1 > product.stock:
+                    return JsonResponse({'error': f'Only {product.stock} items available in stock'}, status=400)
+                    
                 item.quantity += 1 #increment the quantity if the product variation exists
                 item.save()
             else:
+                # Check if product is in stock before creating new cart item
+                if product.stock < 1:
+                    return JsonResponse({'error': 'This product is out of stock'}, status=400)
+                    
                 item = CartItem.objects.create(product=product, quantity=1, user=current_user) 
                 if len(product_variation) > 0:
                     item.variations.clear()
                     item.variations.add(*product_variation)
                 item.save()
         else:
+            # Check if product is in stock before creating new cart item
+            if product.stock < 1:
+                return JsonResponse({'error': 'This product is out of stock'}, status=400)
+                
             cart_item = CartItem.objects.create(product=product, quantity=1, user=current_user)
             if len(product_variation) > 0:
                 cart_item.variations.clear()
                 cart_item.variations.add(*product_variation)
             cart_item.save()
         
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
         return redirect('cart')
     #if the user is not authenticated, get the cart items for the guest user
     else:
@@ -92,21 +112,36 @@ def add_to_cart(request, product_id):
                 index = ex_var_list.index(product_variation) #get the index of the product variation
                 item_id = id[index] #get the id of the cart item
                 item = CartItem.objects.get(product=product, id=item_id) #get the cart item by id
+                
+                # Check if adding one more would exceed stock
+                if item.quantity + 1 > product.stock:
+                    return JsonResponse({'error': f'Only {product.stock} items available in stock'}, status=400)
+                    
                 item.quantity += 1 #increment the quantity if the product variation exists
                 item.save()
             else:
+                # Check if product is in stock before creating new cart item
+                if product.stock < 1:
+                    return JsonResponse({'error': 'This product is out of stock'}, status=400)
+                    
                 item = CartItem.objects.create(product=product, quantity=1, cart=cart) 
                 if len(product_variation) > 0:
                     item.variations.clear()
                     item.variations.add(*product_variation)
                 item.save()
         else:
+            # Check if product is in stock before creating new cart item
+            if product.stock < 1:
+                return JsonResponse({'error': 'This product is out of stock'}, status=400)
+                
             cart_item = CartItem.objects.create(product=product, quantity=1, cart=cart)
             if len(product_variation) > 0:
                 cart_item.variations.clear()
                 cart_item.variations.add(*product_variation)
             cart_item.save()
         
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
         return redirect('cart')
 
 def remove_cart(request, product_id, cart_item_id):

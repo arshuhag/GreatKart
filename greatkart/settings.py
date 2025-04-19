@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -145,11 +147,11 @@ MESSAGE_TAGS = {
 }
 
 #SMTP configuration
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'developer.arshuhag@gmail.com'
-EMAIL_HOST_PASSWORD = 'jiot ivtk asli menq'
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 
 
 # # Session settings
@@ -164,7 +166,8 @@ EMAIL_USE_TLS = True
 
 #sslcommerce configuration
 
-SSLCOMMERZ_STORE_ID = 'great680114a7e1ea9'
-SSLCOMMERZ_STORE_PASSWORD = 'great680114a7e1ea9@ssl'
-SSLCOMMERZ_INIT_URL = 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
-SSLCOMMERZ_VALIDATION_URL = 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'
+SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID')
+SSLCOMMERZ_STORE_PASSWORD = config('SSLCOMMERZ_STORE_PASSWORD')
+SSLCOMMERZ_INIT_URL = config('SSLCOMMERZ_INIT_URL')
+SSLCOMMERZ_VALIDATION_URL = config('SSLCOMMERZ_VALIDATION_URL')
+

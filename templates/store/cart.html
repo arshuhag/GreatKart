@@ -44,28 +44,39 @@
                             {% endfor %}
                         {% endif %}
                     </p>
+                    <p class="text-muted small">
+                        Stock: 
+                        {% if cart_item.product.stock <= 0 %}
+                            <span class="text-danger">Out of Stock</span>
+                        {% else %}
+                            <span class="text-success">{{ cart_item.product.stock }} items available</span>
+                        {% endif %}
+                    </p>
                 </figcaption>
             </figure>
         </td>
         <td> 
-            <!-- col.// -->
-                        <div class="col"> 
-                            <div class="input-group input-spinner">
-                                <div class="input-group-prepend">
-                                <a href="{% url 'remove_cart' cart_item.product.id cart_item.id %}" class="btn btn-light" type="button" id="button-plus"> <i class="fa fa-minus"></i> </a>
-                                </div>
-                                <input type="text" class="form-control"  value="{{ cart_item.quantity }}">
-                                <div class="input-group-append">
-                                    <form action="{% url 'add_to_cart' cart_item.product.id %}" method="POST">
-                                        {% csrf_token %}
-                                        {% for item in cart_item.variations.all %}
-                                            <input type="hidden" name="{{ item.variation_category | lower }}" value="{{ item.variation_value | capfirst }}">
-                                        {% endfor %}
-                                        <button class="btn btn-light" type="submit" id="button-minus"> <i class="fa fa-plus"></i> </button>
-                                    </form>
-                                </div>
-                            </div> <!-- input-group.// -->
-                        </div> <!-- col.// -->
+            <div class="col"> 
+                <div class="input-group input-spinner">
+                    <div class="input-group-prepend">
+                        <a href="{% url 'remove_cart' cart_item.product.id cart_item.id %}" class="btn btn-light" type="button" id="button-minus"> 
+                            <i class="fa fa-minus"></i> 
+                        </a>
+                    </div>
+                    <input type="text" class="form-control" value="{{ cart_item.quantity }}" readonly>
+                    <div class="input-group-append">
+                        <form action="{% url 'add_to_cart' cart_item.product.id %}" method="POST" class="add-to-cart-form">
+                            {% csrf_token %}
+                            {% for item in cart_item.variations.all %}
+                                <input type="hidden" name="{{ item.variation_category | lower }}" value="{{ item.variation_value | capfirst }}">
+                            {% endfor %}
+                            <button class="btn btn-light" type="submit" id="button-plus" {% if cart_item.quantity >= cart_item.product.stock %}disabled{% endif %}> 
+                                <i class="fa fa-plus"></i> 
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </td>
         <td> 
             <div class="price-wrap"> 
@@ -119,4 +130,88 @@
     </section>
     <!-- ========================= SECTION CONTENT END// ========================= -->
 
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="errorModalBody">
+        <!-- Error message will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.add-to-cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const quantityInput = this.closest('.input-group').querySelector('input[type="text"]');
+      const currentQuantity = parseInt(quantityInput.value);
+      const stockDisplay = this.closest('tr').querySelector('.text-success');
+      const availableStock = parseInt(stockDisplay.textContent.match(/\d+/)[0]);
+      
+      // Check if adding one more would exceed stock
+      if (currentQuantity >= availableStock) {
+        document.getElementById('errorModalBody').textContent = `Only ${availableStock} items available in stock`;
+        $('#errorModal').modal('show');
+        submitBtn.disabled = true;
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+      
+      fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('errorModalBody').textContent = data.error;
+          $('#errorModal').modal('show');
+        } else {
+          // Update the quantity display
+          const newQuantity = currentQuantity + 1;
+          quantityInput.value = newQuantity;
+          
+          // Disable the + button if we've reached stock limit
+          if (newQuantity >= availableStock) {
+            submitBtn.disabled = true;
+          }
+          
+          // Reload the page to update totals
+          window.location.reload();
+        }
+      })
+      .catch(error => {
+        document.getElementById('errorModalBody').textContent = 'An error occurred. Please try again.';
+        $('#errorModal').modal('show');
+      })
+      .finally(() => {
+        if (!submitBtn.disabled) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa fa-plus"></i>';
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

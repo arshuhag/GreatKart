@@ -74,6 +74,13 @@ def place_order(request, total=0, quantity=0):
     if cart_items.count() <= 0:
         return redirect('store')
 
+    # Check stock before proceeding
+    for cart_item in cart_items:
+        if cart_item.quantity > cart_item.product.stock:
+            return JsonResponse({
+                'error': f'Only {cart_item.product.stock} items available for {cart_item.product.product_name}'
+            }, status=400)
+
     grand_total = 0
     tax = 0
     for cart_item in cart_items:
