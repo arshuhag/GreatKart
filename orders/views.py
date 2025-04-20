@@ -133,10 +133,10 @@ def place_order(request, total=0, quantity=0):
 def ssl_success(request):
     try:
         # Log the incoming request data
-        print("SSL Success Callback Data:")
-        print(f"POST data: {request.POST}")
-        print(f"GET data: {request.GET}")
-        print(f"Body data: {request.body}")
+        # print("SSL Success Callback Data:")
+        # print(f"POST data: {request.POST}")
+        # print(f"GET data: {request.GET}")
+        # print(f"Body data: {request.body}")
 
         # Try to get transaction ID from different possible sources
         tran_id = (
@@ -150,7 +150,7 @@ def ssl_success(request):
             print("No transaction ID found in request")
             return JsonResponse({'error': 'Missing transaction data in the callback'}, status=400)
 
-        print(f"Looking for order with transaction ID: {tran_id}")
+        # print(f"Looking for order with transaction ID: {tran_id}")
         
         # First try to find the order without checking is_ordered
         try:
@@ -163,7 +163,7 @@ def ssl_success(request):
                 return redirect(reverse('order_complete') + f'?order_number={order.order_number}&payment_id={tran_id}')
                 
         except Order.DoesNotExist:
-            print(f"No order found with number {tran_id}")
+            # print(f"No order found with number {tran_id}")
             # Let's check if there are any orders with similar numbers
             similar_orders = Order.objects.filter(order_number__startswith=tran_id[:8])
             if similar_orders.exists():
@@ -250,6 +250,7 @@ def order_complete(request):
         ordered_products = OrderProduct.objects.filter(order_id=order.id)
         subtotal = sum(item.product_price * item.quantity for item in ordered_products)
         payment = Payment.objects.get(payment_id=transID)
+        
 
         context = {
             'order': order,
