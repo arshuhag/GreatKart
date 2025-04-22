@@ -1,1 +1,1 @@
-web: gunicorn greatkart.wsgi --bind 0.0.0.0:$PORT
+web gunicorn greatkart.wsgi:application --log-file -
