@@ -1,1 +1,2 @@
-web gunicorn greatkart.wsgi:application --log-file -
+web: gunicorn greatkart.wsgi
+
